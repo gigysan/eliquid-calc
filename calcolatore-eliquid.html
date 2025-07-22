@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Calcolatore Liquidi Svapo</title>
+  <style>
+    :root {
+      --bg-color: #121212;
+      --text-color: #f0f0f0;
+      --card-bg: #1e1e2f;
+      --input-bg: #2a2a3a;
+      --accent: #bb86fc;
+      --border: #555;
+      --error: #ff4c4c;
+    }
+
+    body.light {
+      --bg-color: #f9f9f9;
+      --text-color: #222;
+      --card-bg: #ffffff;
+      --input-bg: #eeeeee;
+      --accent: #6c2bd9;
+      --border: #ccc;
+      --error: #d90000;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 2rem;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    .container {
+      max-width: 650px;
+      margin: auto;
+      background-color: var(--card-bg);
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(128, 0, 128, 0.3);
+      transition: background-color 0.3s;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .field {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.3rem;
+    }
+
+    input[type="number"] {
+      width: 100%;
+      padding: 0.6rem;
+      font-size: 1rem;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      color: var(--text-color);
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+
+    .output {
+      margin-top: 2rem;
+      background-color: var(--input-bg);
+      padding: 1.2rem;
+      border-radius: 6px;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+    }
+
+    .toggle-theme {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .toggle-theme button {
+      padding: 0.5rem 1rem;
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .error {
+      color: var(--error);
+      margin-top: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="toggle-theme">
+      <button id="themeToggle">🌙 Cambia Tema</button>
+    </div>
+
+    <h1>Calcolatore Liquidi Svapo</h1>
+
+    <!-- Input fields -->
+    <div class="field"><label>Quantità totale (ml):</label><input type="number" id="tot" value="1000"/></div>
+    <div class="field"><label>% Aroma:</label><input type="number" id="percAroma" value="0"/></div>
+    <div class="field"><label>Nic desiderata (mg/ml):</label><input type="number" id="nicDes" value="2"/></div>
+    <div class="field"><label>Nic base (mg/ml):</label><input type="number" id="nicBase" value="20"/></div>
+    <div class="field"><label>% PG nella base nicotina:</label><input type="number" id="pgBaseNic" value="100"/></div>
+    <div class="field"><label>% VG nella base nicotina:</label><input type="number" id="vgBaseNic" value="0"/></div>
+    <div class="field"><label>% PG desiderato:</label><input type="number" id="pgPerc" value="50"/></div>
+    <div class="field"><label>% VG desiderato:</label><input type="number" id="vgPerc" value="50"/></div>
+    <div class="field"><label>% Acqua desiderata:</label><input type="number" id="h2oPerc" value="0"/></div>
+    
+
+    <!-- Output -->
+    <div class="output" id="result"></div>
+  </div>
+
+  <script>
+    const inputs = document.querySelectorAll('input');
+    const resultBox = document.getElementById('result');
+
+    function calcola() {
+      const tot = parseFloat(document.getElementById('tot').value);
+      const percAroma = parseFloat(document.getElementById('percAroma').value) / 100;
+      const nicDes = parseFloat(document.getElementById('nicDes').value);
+      const nicBase = parseFloat(document.getElementById('nicBase').value);
+      const pgPerc = parseFloat(document.getElementById('pgPerc').value);
+      const vgPerc = parseFloat(document.getElementById('vgPerc').value);
+      const h2oPerc = parseFloat(document.getElementById('h2oPerc').value);
+      const pgBaseNic = parseFloat(document.getElementById('pgBaseNic').value) / 100;
+      const vgBaseNic = parseFloat(document.getElementById('vgBaseNic').value) / 100;
+
+      if (isNaN(tot) || isNaN(percAroma) || isNaN(nicDes) || isNaN(nicBase)) return;
+
+      if (pgPerc + vgPerc + h2oPerc !== 100) {
+        resultBox.innerHTML = `<p class="error">Errore: la somma di PG + VG + H2O deve essere 100%.</p>`;
+        return;
+      }
+
+      const mlNicBase = (tot * nicDes) / nicBase;
+      const mlAroma = tot * percAroma;
+      const pgTot = (pgPerc / 100) * tot;
+      const vgTot = (vgPerc / 100) * tot;
+      const h2oTot = (h2oPerc / 100) * tot;
+
+      const pgPresente = mlAroma + (mlNicBase * pgBaseNic);
+      const vgPresente = mlNicBase * vgBaseNic;
+
+      const pgDaAggiungere = Math.max(0, pgTot - pgPresente);
+      const vgDaAggiungere = Math.max(0, vgTot - vgPresente);
+
+      const totale = mlNicBase + mlAroma + pgDaAggiungere + vgDaAggiungere + h2oTot;
+      const baseNeutra = tot - totale;
+
+      resultBox.innerHTML = `
+        <p><strong>Mix consigliato per ${tot} ml:</strong></p>
+        <ul>
+          <li>Base nicotinata (${nicBase} mg/ml, ${(pgBaseNic*100).toFixed(0)}% PG / ${(vgBaseNic*100).toFixed(0)}% VG): <strong>${mlNicBase.toFixed(2)} ml</strong></li>
+          <li>Aroma (${(percAroma * 100).toFixed(1)} %): <strong>${mlAroma.toFixed(2)} ml</strong></li>
+          <li>PG da aggiungere: <strong>${pgDaAggiungere.toFixed(2)} ml</strong></li>
+          <li>VG da aggiungere: <strong>${vgDaAggiungere.toFixed(2)} ml</strong></li>
+          <li>Acqua da aggiungere: <strong>${h2oTot.toFixed(2)} ml</strong></li>
+        </ul>
+        <p>Totale componenti: <strong>${totale.toFixed(2)} ml</strong></p>
+        ${baseNeutra > 0 ? `<p style="color: #ffcc00;">Attenzione: ${baseNeutra.toFixed(2)} ml non utilizzati</p>` : ''}
+      `;
+    }
+
+    // Calcolo automatico mentre si digita
+    inputs.forEach(input => input.addEventListener('input', calcola));
+
+    // Toggle dark/light
+    const toggleBtn = document.getElementById('themeToggle');
+    toggleBtn.addEventListener('click', () => {
+      document.body.classList.toggle('light');
+      toggleBtn.textContent = document.body.classList.contains('light') ? '🌙 Modalità Scura' : '☀️ Modalità Chiara';
+    });
+
+    // Calcolo iniziale
+    calcola();
+  </script>
+</body>
+</html>
